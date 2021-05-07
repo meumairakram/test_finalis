@@ -56,7 +56,7 @@ app.get('/airtable',async (req,res) => {
 
         for(var i = 0; i < allData.records.length; i++) {
 
-            var currentRecord = allData.records[i];
+            var currentRecord = allData.records[i].fields;
 
             // sampleResponseObj.industry = currentRecord.industry;
 
@@ -79,11 +79,6 @@ app.get('/airtable',async (req,res) => {
 
 
 const getAllDataFromAirtable = () => {
-
-
-    console.log(process.env.AIRTABLE_API);
-    console.log(process.env.BASE);
-    console.log(process.env.TABLE);
 
     return new Promise((resolve, reject ) => {
 

@@ -14,6 +14,13 @@ const app = express();
 
 app.use(express.json())
 
+app.get('/', (req,res) => {
+
+    res.status(200).json({
+        check:'OK'
+    })
+
+})
 
 
 app.get('/airtable',async (req,res) => {
@@ -77,7 +84,7 @@ const getAllDataFromAirtable = () => {
 
         const airtable = new Airtable({apiKey:process.env.AIRTABLE_API})
             .base(process.env.BASE)
-            .table(process.env.DEALS);
+            .table(process.env.TABLE);
 
                 airtable.list({
                     maxRecords:500,

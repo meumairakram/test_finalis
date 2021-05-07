@@ -80,6 +80,11 @@ app.get('/airtable',async (req,res) => {
 
 const getAllDataFromAirtable = () => {
 
+
+    console.log(process.env.AIRTABLE_API);
+    console.log(process.env.BASE);
+    console.log(process.env.TABLE);
+
     return new Promise((resolve, reject ) => {
 
         const airtable = new Airtable({apiKey:process.env.AIRTABLE_API})

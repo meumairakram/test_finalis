@@ -1,4 +1,3 @@
-
 require('dotenv').config()
 
 const express = require('express');
@@ -7,13 +6,11 @@ const bodyParser = require('body-parser');
 
 const Airtable  = require('airtable-node');
 
-const jsonQuery = require('json-query');
-
 const port = process.env.PORT || 3000;
 
 const app = express();
 
-
+var ldlang = require('lodash/lang');
 
 
 app.use(express.json())
@@ -30,110 +27,56 @@ app.get('/', (req,res) => {
 app.post('/airtable',async (req,res) => {
 
 
-    // var defaultParams = {
-    //     sortBy:[{
-    //         field:"",
-    //         direction:""
-    //     }],
-    //     filterBy: [
-    //         {
-    //             attr:'',
-    //             rel:'',
-    //             value:''
-    //         }
-    //     ]
-    // };
-
-    // var params = {...defaultParams,...req.body};
-
     var params = {
         filterBy: []
     };
 
     
+    var filterParams = {
+        
+    };
 
-   if("deal_name" in  req.body && req.body.deal_name.length > 0) {
-
-        var dealNamesToFilter = req.body.deal_name.split('|');
-
-        for(var i = 0; i < dealNamesToFilter.length; i++ ) {
-                        
-            params.filterBy.push(
-                {
-                    attr:'Deal Name',
-                    rel:'=',
-                    value:dealNamesToFilter[i]
-                }
-            )
-        }
-
-   }
-
-
-
-   if("deal_type" in  req.body && req.body.deal_type.length > 0) {
-
-        var dealNamesToFilter = req.body.deal_type.split('|');
-
-        for(var i = 0; i < dealNamesToFilter.length; i++ ) {
-                        
-            params.filterBy.push(
-                {
-                    attr:'Deal Type',
-                    rel:'=',
-                    value:dealNamesToFilter[i]
-                }
-            )
-        }
-
+    if("deal_industry" in req.body && req.body.deal_industry != '') {
+            
+        filterParams.deal_industry = req.body.deal_industry;
     }
 
 
+    
+    if("deal_stage" in req.body && req.body.deal_stage != '') {
+            
+        filterParams.deal_stage = req.body.deal_stage;
+    }
 
-    if("industry" in  req.body && req.body.industry.length > 0) {
-
-        var dealNamesToFilter = req.body.industry.split('|');
-
-        for(var i = 0; i < dealNamesToFilter.length; i++ ) {
-                        
-            params.filterBy.push(
-                {
-                    attr:'Industry',
-                    rel:'=',
-                    value:dealNamesToFilter[i]
-                }
-            )
-        }
-
+    if("deal_type" in req.body && req.body.deal_type != '') {
+            
+        filterParams.deal_type = req.body.deal_type;
     }
 
 
-    if("stage" in  req.body && req.body.stage.length > 0) {
-
-        var dealNamesToFilter = req.body.stage.split('|');
-
-        for(var i = 0; i < dealNamesToFilter.length; i++ ) {
-                        
-            params.filterBy.push(
-                {
-                    attr:'Stage',
-                    rel:'=',
-                    value:dealNamesToFilter[i]
-                }
-            )
-        }
-
+    if("deal_size_min" in req.body && req.body.deal_size_min != '') {
+            
+        filterParams.deal_size_min = req.body.deal_size_min;
     }
 
+    
+    
+    if("deal_size_max" in req.body && req.body.deal_size_max != '') {
+            
+        filterParams.deal_size_max = req.body.deal_size_max;
+    }
 
+    
 
-
+    
 
     // console.log(params);
     // res.send({check:"OK"});
     // return;
 
-    allData = await getAllDataFromAirtable(params);
+    allData = await getDataFromSource(params);
+
+    
 
     
     let finalResponse = [];
@@ -155,224 +98,225 @@ app.post('/airtable',async (req,res) => {
         industry_sub:''
     };
 
-  
+    var responseData = [];
+    var finalData = await getDataFromSource(null);
+
+    if(finalData.length < 1) {
+        return responseData;
+    }
     
-    
-    if(allData.records.length > 0) {
-
-        var avlFilters = ['Deal Name','Deal Type','Industry','Stage'];
+   
 
 
-        var recordsArray = [];
+    for(var i = 0; i<finalData.length; i++) {
 
+        var currentRecord = finalData[i].fields;
 
-        for(var i = 0; i < allData.records.length; i++) {
+        valueExists = true;
 
-            var currentRecord = allData.records[i].fields;
+        if("deal_industry" in filterParams) {
 
-        
-
-            if(params.filterBy.length > 0 && params.filterBy[0].attr != '') {
- 
-
-                recordValid = false;
-                params.filterBy.forEach((elem,index) => {
-                    recordValid = searchThroughRecord(elem,currentRecord);
-
-                   
-                    if(recordValid) {
-
-                        indexToAdd = avlFilters.indexOf(elem.attr);
-                        
-                        if(indexToAdd > -1) {
-                            if(Array.isArray(recordsArray[indexToAdd])) {
-                                recordsArray[indexToAdd].push(currentRecord);
-                            } else {
-                                recordsArray[indexToAdd] = [];
-                                recordsArray[indexToAdd].push(currentRecord);
-                            }
-                        }
-
-
-                    }
-                
-                })
-              
-                
-
-                 
-            } else {
-
-                finalResponse.push(currentRecord)
-
+            if(valueExists == true) {
+                var valueExists = filterFromRecord(currentRecord,'industry',filterParams.deal_industry);
             }
- 
+            
+        }
 
+
+        if("deal_stage" in filterParams) {
+
+            if(valueExists == true) {
+                var valueExists = filterFromRecord(currentRecord,'stage',filterParams.deal_stage);
+            }
+            
+        }
+
+
+        if("deal_type" in filterParams) {
+            
+            if(valueExists == true) {
+                var valueExists = filterFromRecord(currentRecord,'type',filterParams.deal_type);
+            }
 
         }
 
 
+        
+        if("deal_size_min" in filterParams) {
+            
+            if(valueExists == true) {
+                var valueExists = filterFromRecord(currentRecord,'deal_size_min',filterParams.deal_size_min);
+            }
+
+        }
+
+        if("deal_size_max" in filterParams) {
+            
+            if(valueExists == true) {
+                var valueExists = filterFromRecord(currentRecord,'deal_size_max',filterParams.deal_size_max);
+            }
+
+        }
+
+
+        
+        
+        if(valueExists) {
+            responseData.push(currentRecord);
+        }
+
+
+
     }
-
     
-
-    res.json(recordsArray);
+    res.json(responseData);
 
     
 
 });
 
 
-const searchThroughRecord = (elem, currentRecord) => {
 
-                    
-        isRecordValid = false;
+const filterFromRecord = (record, type, value) => {
 
-        
-        switch(elem.rel) {
+    var shouldReturnTrue = true;
 
-            case '=':
-             
-                if(isNaN(currentRecord[elem.attr])) {
+    switch(type) {
 
-                   if(typeof currentRecord[elem.attr] == 'string') {
-                      
-                        if(currentRecord[elem.attr].toLowerCase() == elem.value.toLowerCase() ) {
-                            
-                            isRecordValid = true;
+        case 'stage': {
+            var valueToCompare = record['Stage'];
+            var compareWith = value;
 
-                        }
-                   }
-                    
+            return compareRecordWithValue(valueToCompare, compareWith);
 
-                    if(Array.isArray(currentRecord[elem.attr])) {
+            break;
+        }
 
-                        foundval = [];
-                        foundval = currentRecord[elem.attr].find((val) => {
+        case "type": {
+            var valueToCompare = record['Deal Type'];
+            var compareWith = value;
+            return compareRecordWithValue(valueToCompare, compareWith);
 
-                            if(typeof val == 'string') {
-                               
-                                if(val.toLowerCase().trim() == elem.value.toLowerCase().trim() ) {
-                                   
-                                    return true;
+            break;
+        }
 
-                                }
-                            }  
-                        })
-                        
-                        if(foundval && foundval.length > 0) {
-                           
-                            isRecordValid = true;
-                        }
-                    }
+        case 'industry': {
+            var valueToCompare = record['Industry'];
+            var compareWith = value;
+
+            return  compareRecordWithValue(valueToCompare, compareWith);
+            break;
+        }
 
 
-                } else {
-                    if(parseFloat(currentRecord[elem.attr]) == parseFloat(elem.value) ) {
+        case "deal_size_min": {
 
-                        isRecordValid = true;
+            var valueToCompare = record['Proposed Deal Size'];
+            var compareWith = value;
+            
+            return  compareRecordValueWithOperator(valueToCompare, compareWith, '>');
+            break;
 
-                    }
-                }
-               
-
-                break;
-
-            case 'contain':
-                
-                if(typeof currentRecord[elem.attr] == 'string') {
-                    if(currentRecord[elem.attr].toLowerCase().indexOf(elem.value.toLowerCase()) > -1  ) {
-
-                        isRecordValid = true;
-
-                    }
-                }
-                
-                if(Array.isArray(currentRecord[elem.attr])) {
-                   
-                    findElements = currentRecord[elem.attr].find((val) => {
-
-                        if(typeof val == 'string') {
-                            if(val.toLowerCase() == elem.value.toLowerCase()) {
-                                return true;
-                            }
-                        }
-                        
-
-                    });
-
-                    if(findElements.length > 0 ) {
-                        isRecordValid = true;
-                    }
-
-                }
-              
-
-                break;
-
-            case '!=':
-                if(isNaN(currentRecord[elem.attr])) {
-                    
-                    if(currentRecord[elem.attr].toLowerCase() != elem.value.toLowerCase() ) {
-
-                        isRecordValid = true;
-
-                    }
-                } else {
-                    if(parseFloat(currentRecord[elem.attr]) != parseFloat(elem.value) ) {
-
-                        isRecordValid = true;
-
-                    }
-                }
-
-                break;
-
-            case '>':
-                if(parseFloat(currentRecord[elem.attr]) > parseFloat(elem.value) ) {
-
-                    isRecordValid = true;
-
-                }
-
-                break;
-
-            case '<':
-                if(parseFloat(currentRecord[elem.attr]) < parseFloat(elem.value) ) {
-
-                    isRecordValid = true;
-
-                }
-
-                break;
-
-
-            default:
-                // do nothing
-
-                isRecordValid = false;
-                break;
 
         }
 
 
-     
-    if(isRecordValid == true) {
+        case "deal_size_max": {
 
-            
-        return true;
+            var valueToCompare = record['Proposed Deal Size'];
+            var compareWith = value;
 
-    } else {
-        return false;
+            return  compareRecordValueWithOperator(valueToCompare, compareWith, '<');
+            break;
+
+
+        }
+
+
+
+        default:
+            // do nothing break;
+            break;
+
+
     }
 
-   
+
+
+}
+
+
+const compareRecordWithValue = (recordValue, resultValue)  => {
+    
+    if(ldlang.isString(recordValue)) {
+
+        // handle as string
+        if(resultValue.toLowerCase().indexOf(recordValue.toLowerCase()) > -1) {
+            return true;
+        }
+
+    } 
+
+    if(ldlang.isArray(recordValue)) {
+        // handle as array with depth 1
+        for(var i = 0; i < recordValue.length; i++) {
+            
+
+            if(resultValue.toLowerCase().indexOf(recordValue[i].toLowerCase()) > -1) {
+                
+                return true;
+            }
+        }
+    }
+
+    if(ldlang.isNumber(recordValue) && ldlang.isFinite(recordValue)) {
+        // handle as safe number
+
+
+    }
+
+    return false;
+
 
 }
 
 
 
-const getAllDataFromAirtable = (params) => {
+const compareRecordValueWithOperator = (recordValue, resultValue, operator  = '=') => {
+
+    console.log('Comparing ',recordValue);
+    // if(!ldlang.isNumber(recordValue) || !ldlang.isNumber(resultValue) || !ldlang.isFinite(recordValue) || !ldlang.isFinite(resultValue)) {
+
+    //     return false;
+    // }
+
+
+    refNumber = parseFloat(recordValue);
+    compareNumber = parseFloat(resultValue);
+
+    
+    if(operator == '>') {
+        return (refNumber > compareNumber);
+    } 
+
+    if(operator == '<') {
+        return (refNumber < compareNumber);
+    } 
+    
+
+}
+
+
+/**
+ * Set of Compare Functions
+ * @param {} sorting 
+ * @returns 
+ */
+
+
+
+
+const getDataFromSource = (sorting) => {
 
     // var defaultParams = {
     //     sortBy:[{
@@ -392,12 +336,14 @@ const getAllDataFromAirtable = (params) => {
         maxRecords:500,
         pageSize:100,
         view:'Deals: 2nd Task (S)',
-        sort:params.sortBy
     };
 
-    // console.log(params);
+    if(sorting) {
+        params.sort = sorting;
+    }
 
-    // return;
+
+    /** Temporarily OFFF */
 
     return new Promise((resolve, reject ) => {
 
@@ -409,17 +355,20 @@ const getAllDataFromAirtable = (params) => {
                    
                 
                 }).then((response) => {
-
-                    resolve(response);
+                    
+                    resolve(response.records);
                     
 
                 })
 
 
-    })
+    });
+
     
 
-
+            // return new Promise((res,rej) => {
+            //     res(dummyData);
+            // })
 }
 
 

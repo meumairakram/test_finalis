@@ -38,7 +38,7 @@ app.post('/airtable',async (req,res) => {
 
     console.log('REQUEST CAME IN',req.body);
 
-    if("deal_industry" in req.body && req.body.deal_industry != '' && req.body.deal_stage != 'null') {
+    if("deal_industry" in req.body && req.body.deal_industry != '' && req.body.deal_industry != 'null') {
             
         filterParams.deal_industry = req.body.deal_industry;
     }

@@ -68,7 +68,33 @@ app.post('/airtable',async (req,res) => {
         filterParams.deal_size_max = req.body.deal_size_max;
     }
 
+
+    var sort_object = {};
+
+    if("sort_by" in req.body && req.body.sort_by != '' && req.body.sort_by != 'null') {
+        sort_object.field = req.body.sort_by;        
+    }
+
+    if("sort_direction" in req.body && req.body.sort_direction != '' && req.body.sort_direction != 'null') {
+        sort_object.direction = req.body.sort_direction;        
+    } else {
+        sort_object.direction = "asc";
+    }
+
+
     
+
+    sortingOrder = [];
+
+    if("field" in sort_object) {
+
+        sortingOrder.push(sort_object);
+
+    }
+
+    // params.sort = [{field: "Deal Name",direction:"asc"}];
+
+
 
     
 
@@ -76,8 +102,7 @@ app.post('/airtable',async (req,res) => {
     // res.send({check:"OK"});
     // return;
 
-    allData = await getDataFromSource(params);
-
+    
     
 
     
@@ -101,7 +126,7 @@ app.post('/airtable',async (req,res) => {
     };
 
     var responseData = [];
-    var finalData = await getDataFromSource(null);
+    var finalData = await getDataFromSource(sortingOrder);
 
     if(finalData.length < 1) {
         return responseData;
@@ -286,7 +311,6 @@ const compareRecordWithValue = (recordValue, resultValue)  => {
 
 const compareRecordValueWithOperator = (recordValue, resultValue, operator  = '=') => {
 
-    console.log('Comparing ',recordValue);
     // if(!ldlang.isNumber(recordValue) || !ldlang.isNumber(resultValue) || !ldlang.isFinite(recordValue) || !ldlang.isFinite(resultValue)) {
 
     //     return false;
@@ -340,11 +364,12 @@ const getDataFromSource = (sorting) => {
         view:'Deals: 2nd Task (S)',
     };
 
+    // params.sort = [{field: "Deal Name",direction:"asc"}];
     if(sorting) {
         params.sort = sorting;
     }
 
-
+    console.log(params);
     /** Temporarily OFFF */
 
     return new Promise((resolve, reject ) => {
@@ -353,10 +378,8 @@ const getDataFromSource = (sorting) => {
             .base(process.env.BASE)
             .table(process.env.TABLE);
 
-                airtable.list({
-                   
-                
-                }).then((response) => {
+              
+                airtable.list(params).then((response) => {
                     
                     resolve(response.records);
                     

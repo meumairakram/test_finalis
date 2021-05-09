@@ -36,32 +36,32 @@ app.post('/airtable',async (req,res) => {
         
     };
 
-    if("deal_industry" in req.body && req.body.deal_industry != '') {
+    if("deal_industry" in req.body && req.body.deal_industry != '' && req.body.deal_stage != 'null') {
             
         filterParams.deal_industry = req.body.deal_industry;
     }
 
 
     
-    if("deal_stage" in req.body && req.body.deal_stage != '') {
+    if("deal_stage" in req.body && req.body.deal_stage != '' && req.body.deal_stage != 'null') {
             
         filterParams.deal_stage = req.body.deal_stage;
     }
 
-    if("deal_type" in req.body && req.body.deal_type != '') {
+    if("deal_type" in req.body && req.body.deal_type != '' && req.body.deal_type != 'null') {
             
         filterParams.deal_type = req.body.deal_type;
     }
 
 
-    if("deal_size_min" in req.body && req.body.deal_size_min != '') {
+    if("deal_size_min" in req.body && req.body.deal_size_min != '' && req.body.deal_size_min != 'null') {
             
         filterParams.deal_size_min = req.body.deal_size_min;
     }
 
     
     
-    if("deal_size_max" in req.body && req.body.deal_size_max != '') {
+    if("deal_size_max" in req.body && req.body.deal_size_max != '' && req.body.deal_size_max != 'null') {
             
         filterParams.deal_size_max = req.body.deal_size_max;
     }

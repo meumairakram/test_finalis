@@ -69,6 +69,15 @@ app.post('/airtable',async (req,res) => {
     }
 
 
+    if("deal_retainer" in req.body && req.body.deal_retainer != '' && req.body.deal_retainer != 'null') {
+        // should be yes or no
+        filterParams.deal_retainer = req.body.deal_retainer;
+    }
+
+
+
+    // sorting params
+
     var sort_object = {};
 
     if("sort_by" in req.body && req.body.sort_by != '' && req.body.sort_by != 'null') {
@@ -185,6 +194,16 @@ app.post('/airtable',async (req,res) => {
 
         }
 
+        // deal_retainer
+
+        if("deal_retainer" in filterParams) {
+            
+            if(valueExists == true) {
+                var valueExists = filterFromRecord(currentRecord,'deal_retainer',filterParams.deal_retainer);
+            }
+
+        }
+
 
         
         
@@ -259,6 +278,15 @@ const filterFromRecord = (record, type, value) => {
 
         }
 
+        case 'deal_retainer': {
+            var valueToCompare = record['Retainer'];
+            var compareWith = value;
+
+            return compareRetainerRecord(valueToCompare, compareWith);
+            break;
+
+        }
+
 
 
         default:
@@ -304,6 +332,49 @@ const compareRecordWithValue = (recordValue, resultValue)  => {
 
     return false;
 
+
+}
+
+
+
+// Retainer Switch
+const compareRetainerRecord = (recordValue, resultValue)  => {
+
+    if(!ldlang.isArray(recordValue)) {
+        return false;
+    }
+
+
+    for(var i = 0; i < recordValue.length; i++) {
+        
+        if(ldlang.isString(recordValue[i])) {
+            var retainerNumber = recordValue[i];
+            
+            if(retainerNumber.toLowerCase().indexOf('available') > -1 && resultValue == 0) {
+                return true;
+            }
+            
+            retainerNumber = retainerNumber.replace('$','');
+            
+            retainerNumber = retainerNumber.replace(new RegExp(',','g'),'');
+
+            
+            retainerNumber = parseFloat(retainerNumber);
+           
+            if(retainerNumber > 0 && resultValue == 1) {
+                return true;
+            }
+
+            if(retainerNumber < 1 && resultValue == 0) {
+                return true;
+            }
+
+        }
+        
+
+    }
+
+    return false;
 
 }
 

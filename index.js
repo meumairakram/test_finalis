@@ -75,6 +75,22 @@ app.post('/airtable',async (req,res) => {
     }
 
 
+    
+    if("eng_letter_date_min" in req.body && req.body.eng_letter_date_min != '' && req.body.eng_letter_date_min != 'null') {
+        // should be yes or no
+        filterParams.eng_letter_date_min = req.body.eng_letter_date_min;
+    }
+
+
+      
+    if("eng_letter_date_max" in req.body && req.body.eng_letter_date_max != '' && req.body.eng_letter_date_max != 'null') {
+        // should be yes or no
+        filterParams.eng_letter_date_max = req.body.eng_letter_date_max;
+    }
+
+
+
+
 
     // sorting params
 
@@ -204,6 +220,22 @@ app.post('/airtable',async (req,res) => {
 
         }
 
+        if("eng_letter_date_min" in filterParams) {
+
+            if(valueExists == true) {
+                var valueExists = filterFromRecord(currentRecord,'eng_letter_date_min',filterParams.eng_letter_date_min);
+
+            }
+        }
+
+        if("eng_letter_date_max" in filterParams) {
+
+            if(valueExists == true) {
+                var valueExists = filterFromRecord(currentRecord,'eng_letter_date_max',filterParams.eng_letter_date_max);
+
+            }
+        }
+
 
         
         
@@ -288,6 +320,43 @@ const filterFromRecord = (record, type, value) => {
         }
 
 
+        case "eng_letter_date_min": {
+            var valueToFind = new Date(value);
+            timeStampToFind = valueToFind.getTime();
+
+            if(record['Engagement Letter Date'] == '') {
+                return false;
+            }
+
+            var recordDate =  new Date(record['Engagement Letter Date']);
+
+            var timeStampRecord = recordDate.getTime();
+
+
+            return compareRecordValueWithOperator(timeStampRecord,timeStampToFind,'>');
+
+            break;
+        }
+
+        case "eng_letter_date_max": {
+
+            var valueToFind = new Date(value);
+            timeStampToFind = valueToFind.getTime();
+
+            if(record['Engagement Letter Date'] == '') {
+                return false;
+            }
+
+            var recordDate =  new Date(record['Engagement Letter Date']);
+
+            var timeStampRecord = recordDate.getTime();
+
+
+            return compareRecordValueWithOperator(timeStampRecord,timeStampToFind,'<');
+
+            break;
+
+        }
 
         default:
             // do nothing break;
